@@ -100,6 +100,38 @@ export default function Scheduler() {
     }
   };
 
+  const toggleTaskCompletion = (id: number) => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === id ? { ...task, isCompleted: !task.isCompleted } : task
+      )
+    );
+    const updatedTasks = tasks.map((task) =>
+      task.id === id ? { ...task, isCompleted: !task.isCompleted } : task
+    );
+    localStorage.setItem("schedulerTasks", JSON.stringify(updatedTasks));
+  };
+
+  const getWeeklyTasks = () => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+
+    return tasks.filter((task) => {
+      const taskDate = new Date(task.expDate);
+      return taskDate >= startOfWeek && taskDate <= today;
+    });
+  };
+
+  const weeklyTasks = getWeeklyTasks();
+
+  const calculateScheduleCompletion = () => {
+    const completedSchedules = tasks.filter(task => task.isCompleted).length;
+    return tasks.length > 0 ? Math.round((completedSchedules / tasks.length) * 100) : 0;
+  };
+
+  const scheduleCompletion = calculateScheduleCompletion();
+
   return (
     <>
       <div className='bg-[#F9D965] p-4 rounded-3xl flex justify-between items-center'>
@@ -183,6 +215,20 @@ export default function Scheduler() {
                           </li>
                         ))}
                       </ol>
+                    )}
+                    {dayTasks.length > 0 && (
+                      <div>
+                        {dayTasks.map((task) => (
+                          <div key={task.id}>
+                            <input
+                              type="checkbox"
+                              checked={task.isCompleted}
+                              onChange={() => toggleTaskCompletion(task.id)}
+                            />
+                            <span>{task.name}</span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 );
@@ -311,6 +357,17 @@ export default function Scheduler() {
           )}
         </div>
       </dialog>
+
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold">Schedule Completion</h3>
+        <div className="w-full bg-gray-300 rounded-full h-6">
+          <div
+            className="bg-blue-500 h-6 rounded-full"
+            style={{ width: `${scheduleCompletion}%` }}
+          ></div>
+        </div>
+        <p className="text-lg mt-2">{scheduleCompletion}% of schedules completed</p>
+      </div>
     </>
   );
 }

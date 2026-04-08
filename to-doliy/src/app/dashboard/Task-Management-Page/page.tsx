@@ -45,12 +45,23 @@ export default function Task_Management() {
     }
   }, [tasks, isLoaded]);
 
+  const updateProgressBar = () => {
+    const storedTasks = localStorage.getItem("tasks");
+    if (storedTasks) {
+      const tasks = JSON.parse(storedTasks);
+      const completedTasks = tasks.filter((task: Task) => task.isCompleted).length;
+      const progress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+      localStorage.setItem("taskProgress", JSON.stringify(progress));
+    }
+  };
+
   const toggleTask = (id: number) => {
     setTasks(prev =>
       prev.map(task =>
         task.id === id ? { ...task, isCompleted: !task.isCompleted } : task
       )
     );
+    updateProgressBar();
   };
 
   const addTask = (e: React.FormEvent) => {
@@ -111,6 +122,12 @@ const getDateLabel = (dateStr: string) => {
   });
 };
 
+const calculateTaskCompletion = () => {
+  const completedTasks = tasks.filter(task => task.isCompleted).length;
+  return tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+};
+
+const taskCompletion = calculateTaskCompletion();
 
   if (!isLoaded) return null;
 

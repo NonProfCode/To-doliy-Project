@@ -124,6 +124,30 @@ export default function Time_Logger() {
     setLogs(reordered);
   };
 
+  const calculateWeeklyTotalTime = (logs: Log[]) => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    startOfWeek.setHours(0, 0, 0, 0); // Start of the week
+
+    return logs.reduce((total, log) => {
+      const logStartTime = log.startTime ? new Date(log.startTime) : null;
+      const logEndTime = log.endTime ? new Date(log.endTime) : null;
+
+      if (logStartTime && logStartTime >= startOfWeek && logStartTime <= today) {
+        total += log.duration;
+      } else if (logEndTime && logEndTime >= startOfWeek && logEndTime <= today) {
+        total += log.duration;
+      } else if (log.status === "running" && log.startTime) {
+        total += Date.now() - log.startTime;
+      }
+
+      return total;
+    }, 0);
+  };
+
+  const weeklyTotalTime = calculateWeeklyTotalTime(logs);
+
   if (!isLoaded) return null;
 
   return (
@@ -264,6 +288,11 @@ export default function Time_Logger() {
 
           {/* Categories placeholder */}
           <div className="flex mt-4 border-t-2 p-3">Categories (drag rows ↑)</div>
+        </div>
+
+        <div className="mb-4">
+          <h3 className="text-xl font-semibold">Weekly Total Logged Time</h3>
+          <p className="text-lg">{(weeklyTotalTime / 3600000).toFixed(2)} hours logged this week</p>
         </div>
 
     </>
