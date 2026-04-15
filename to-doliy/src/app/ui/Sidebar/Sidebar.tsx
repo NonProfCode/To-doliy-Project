@@ -1,5 +1,6 @@
-//imports
+"use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 // logos
 import { IoMdHome, IoIosStats, IoMdSettings } from "react-icons/io";
@@ -8,10 +9,14 @@ import { CiCalendar, CiMenuKebab } from "react-icons/ci";
 import { MdSchedule } from "react-icons/md";
 import { FaHeart } from "react-icons/fa";
 
-
 export default function Sidebar() {
+    const [userProfile, setUserProfile] = useState({
+        name: "User",
+        description: "This is your profile",
+        avatar: "/api/placeholder/150/150",
+    });
 
-const menuItems = [
+    const menuItems = [
     {
         title: "Dashboard",
         path: "/dashboard",
@@ -47,7 +52,46 @@ const menuItems = [
         path: "/dashboard/Settings-Page",
         icon: <IoMdSettings />,
     },
-]
+];
+
+    useEffect(() => {
+        const loadProfile = () => {
+            const stored = localStorage.getItem("userProfile");
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    setUserProfile({
+                        name: parsed.name || "User",
+                        description: parsed.description || parsed.about || "This is your profile",
+                        avatar: parsed.avatar || "/api/placeholder/150/150",
+                    });
+                } catch (error) {
+                    console.warn("Unable to parse saved user profile", error);
+                }
+            }
+        };
+
+        loadProfile();
+
+        const handleStorage = (event: StorageEvent) => {
+            if (event.key === "userProfile") {
+                loadProfile();
+            }
+        };
+
+        const handleProfileUpdated = () => {
+            loadProfile();
+        };
+
+        window.addEventListener("storage", handleStorage);
+        window.addEventListener("userProfileUpdated", handleProfileUpdated);
+
+        return () => {
+            window.removeEventListener("storage", handleStorage);
+            window.removeEventListener("userProfileUpdated", handleProfileUpdated);
+        };
+    }, []);
+
     return (
         <div className="p-4 bg-[#F9D965] rounded-3xl h-full flex flex-col justify-between">
             <p className="mb-4 font-bold text-3xl text-shadow-lg shadow-black">To-doliy:</p>
@@ -63,15 +107,25 @@ const menuItems = [
 
             {/* User Profile Section */}
             <div className="mt-auto">
-            <div className="rounded-full bg-[#FFB22C] text-center p-2 mt-4 ">
-            <div className="grid grid-cols-2 items-center text-2xl">
-                <div>User</div>
-                <div className="flex justify-end">
-                    <CiMenuKebab className="cursor-pointer hover:text-gray-700 transition-colors duration-200" />
+                <div className="rounded-3xl bg-[#FFB22C] p-3 mt-4 flex items-center gap-3">
+                    <Link href="/dashboard/User_Profile" className="flex items-center gap-3 flex-1">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-white">
+                            <img
+                                src={userProfile.avatar}
+                                alt={userProfile.name}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="text-left">
+                            <p className="text-base font-semibold">{userProfile.name}</p>                 
+                            {/* <p className="text-sm text-black/70">{userProfile.description}</p> For description*/}
+                        </div>
+                    </Link>
+                    <Link href="/dashboard/User_Profile" className="text-black/70 hover:text-gray-700 transition-colors duration-200">
+                        <CiMenuKebab className="text-2xl" />
+                    </Link>
+                </div>
             </div>
-            </div>
-            </div>
-        </div>
         </div>
     );
 }
