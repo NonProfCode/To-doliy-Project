@@ -19,6 +19,10 @@ export default function Task_Management() {
   const [tasks, setTasks] = useState<Task[]>([]);
   //prevent local storage override on first load
   const [isLoaded, setIsLoaded] = useState(false);
+  // Track selected tasks for bulk operations
+  const [selectedTasks, setSelectedTasks] = useState<Set<number>>(new Set());
+  // Track which task is being edited
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   
   const [newTask, setNewTask] = useState({
     name: '',
@@ -27,8 +31,80 @@ export default function Task_Management() {
     priority: 'Medium' as 'Low' | 'Medium' | 'High',
   });
 
+  const [editTask, setEditTask] = useState({
+    name: '',
+    description: '',
+    expDate: '',
+    priority: 'Medium' as 'Low' | 'Medium' | 'High',
+  });
+
   const deleteTask = (id: number) => {
     setTasks(prev => prev.filter(task => task.id !== id));
+  };
+
+  const toggleTaskSelection = (id: number) => {
+    setSelectedTasks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTasks.size === tasks.length && tasks.length > 0) {
+      setSelectedTasks(new Set());
+    } else {
+      setSelectedTasks(new Set(tasks.map(task => task.id)));
+    }
+  };
+
+  const deleteSelectedTasks = () => {
+    if (selectedTasks.size === 0) return;
+    if (window.confirm(`Delete ${selectedTasks.size} selected task(s)?`)) {
+      setTasks(prev => prev.filter(task => !selectedTasks.has(task.id)));
+      setSelectedTasks(new Set());
+    }
+  };
+
+  const openEditModal = (task: Task) => {
+    setEditingTaskId(task.id);
+    setEditTask({
+      name: task.name,
+      description: task.description,
+      expDate: task.expDate,
+      priority: task.priority,
+    });
+    (document.getElementById('edit_modal') as HTMLDialogElement)?.showModal();
+  };
+
+  const updateTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingTaskId === null) return;
+    
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === editingTaskId
+          ? {
+              ...task,
+              name: editTask.name,
+              description: editTask.description,
+              expDate: editTask.expDate,
+              priority: editTask.priority,
+            }
+          : task
+      )
+    );
+    setEditingTaskId(null);
+    (document.getElementById('edit_modal') as HTMLDialogElement)?.close();
+  };
+
+  const setTodayDate = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setNewTask({ ...newTask, expDate: today });
   };
 
   useEffect(() => {
@@ -161,13 +237,22 @@ const taskCompletion = calculateTaskCompletion();
         required
         className="border p-2 rounded-lg h-28 resize-none"
       />
-      <input
-        type="date"
-        value={newTask.expDate}
-        onChange={(e) => setNewTask({ ...newTask, expDate: e.target.value })}
-        required
-        className="border p-2 rounded-lg"
-      />
+      <div className="flex gap-2 items-end">
+        <input
+          type="date"
+          value={newTask.expDate}
+          onChange={(e) => setNewTask({ ...newTask, expDate: e.target.value })}
+          required
+          className="border p-2 rounded-lg flex-1"
+        />
+        <button
+          type="button"
+          onClick={setTodayDate}
+          className="btn bg-blue-600 text-white px-4 py-2 rounded-lg whitespace-nowrap"
+        >
+          Today
+        </button>
+      </div>
       <select
         value={newTask.priority}
         onChange={(e) =>
@@ -201,7 +286,72 @@ const taskCompletion = calculateTaskCompletion();
 </dialog>
 
 
-      {/* Main task list */}
+{/* Edit Modal */}
+<dialog id="edit_modal" className="modal">
+  <div className="modal-box bg-[#F9D965]">
+    <h3 className="font-bold text-lg mb-4">Edit Task</h3>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        updateTask(e);
+      }}
+      className="grid grid-cols-1 gap-4"
+    >
+      <input
+        type="text"
+        maxLength={30}
+        placeholder="Task name"
+        value={editTask.name}
+        onChange={(e) => setEditTask({ ...editTask, name: e.target.value })}
+        required
+        className="border p-2 rounded-lg"
+      />
+      <textarea
+        placeholder="Description"
+        value={editTask.description}
+        onChange={(e) => setEditTask({ ...editTask, description: e.target.value })}
+        required
+        className="border p-2 rounded-lg h-28 resize-none"
+      />
+      <input
+        type="date"
+        value={editTask.expDate}
+        onChange={(e) => setEditTask({ ...editTask, expDate: e.target.value })}
+        required
+        className="border p-2 rounded-lg"
+      />
+      <select
+        value={editTask.priority}
+        onChange={(e) =>
+          setEditTask({ ...editTask, priority: e.target.value as 'Low' | 'Medium' | 'High' })
+        }
+        className="border p-2 rounded-lg"
+      >
+        <option value="Low">Low Priority</option>
+        <option value="Medium">Medium Priority</option>
+        <option value="High">High Priority</option>
+      </select>
+
+      {/* Buttons aligned */}
+      <div className="flex justify-end gap-2 mt-4">
+        <button
+          type="button"
+          className="btn bg-red-700 px-4 py-2 rounded-lg text-white"
+          onClick={() => (document.getElementById('edit_modal') as HTMLDialogElement)?.close()}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="btn bg-green-600 text-white px-4 py-2 rounded-lg"
+        >
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
 <div className="bg-[#F9D965] p-4 rounded-3xl text-black">
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
       <p className="text-2xl  font-semibold">
@@ -214,15 +364,38 @@ const taskCompletion = calculateTaskCompletion();
         } available task(s)
       </p>
 
-      <button
-        onClick={() =>
-          (document.getElementById('my_modal_1') as HTMLDialogElement)?.showModal()
-        }
-        className="btn rounded-full bg-[#F3C623] px-3 sm:px-4 py-2 text-lg sm:text-xl hover:bg-[#FCFF58] border-none text-black shadow-md transition-colors duration-200"
-      >
-        <span className="text-xl font-bold">+</span>
-        <span className="hidden sm:inline ml-1">Add Task</span>
-      </button>
+      <div className="flex gap-2 items-center">
+        {tasks.length > 0 && (
+          <>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedTasks.size === tasks.length && tasks.length > 0}
+                onChange={toggleSelectAll}
+                className="checkbox border-black bg-[#FCFF58] shadow-[#FCFF58] shadow-2xl text-black"
+              />
+              <span className="text-sm font-semibold">Select All</span>
+            </label>
+            {selectedTasks.size > 0 && (
+              <button
+                onClick={deleteSelectedTasks}
+                className="btn bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm hover:bg-red-700"
+              >
+                Delete ({selectedTasks.size})
+              </button>
+            )}
+          </>
+        )}
+        <button
+          onClick={() =>
+            (document.getElementById('my_modal_1') as HTMLDialogElement)?.showModal()
+          }
+          className="btn rounded-full bg-[#F3C623] px-3 sm:px-4 py-2 text-lg sm:text-xl hover:bg-[#FCFF58] border-none text-black shadow-md transition-colors duration-200"
+        >
+          <span className="text-xl font-bold">+</span>
+          <span className="hidden sm:inline ml-1">Add Task</span>
+        </button>
+      </div>
     </div>
     
         {/* Task list grouped by date */}
@@ -238,11 +411,19 @@ const taskCompletion = calculateTaskCompletion();
               >
                 <div className="flex-1">
                   <div className="flex justify-between items-start gap-2">
-                    <h3
-                      className={`text-base sm:text-lg ${task.isCompleted ? 'line-through decoration-2' : ''}`}
-                    >
-                      {task.name}
-                    </h3>
+                    <div className="flex items-start gap-2 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedTasks.has(task.id)}
+                        onChange={() => toggleTaskSelection(task.id)}
+                        className="mt-1 checkbox border-black bg-[#FCFF58] shadow-[#FCFF58] shadow-2xl text-black"
+                      />
+                      <h3
+                        className={`text-base sm:text-lg ${task.isCompleted ? 'line-through decoration-2' : ''}`}
+                      >
+                        {task.name}
+                      </h3>
+                    </div>
 
                     <div className="flex items-center gap-2">
                       <input
@@ -256,6 +437,14 @@ const taskCompletion = calculateTaskCompletion();
                           <GoKebabHorizontal />
                         </summary>
                         <ul className="menu dropdown-content rounded-box w-44 sm:w-52 p-2 bg-white">
+                          <li>
+                            <button
+                              onClick={() => openEditModal(task)}
+                              className="hover:bg-blue-600 hover:text-white w-full text-left px-4 py-2"
+                            >
+                              Edit
+                            </button>
+                          </li>
                           <li>
                             <button
                               onClick={() => deleteTask(task.id)}

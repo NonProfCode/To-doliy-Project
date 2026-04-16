@@ -26,6 +26,13 @@ export default function Time_Logger() {
     description: ""
   });
 
+  // For editing logs
+  const [editingLogId, setEditingLogId] = useState<number | null>(null);
+  const [editLog, setEditLog] = useState({
+    name: "",
+    description: ""
+  });
+
   // Load saved logs from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -69,6 +76,32 @@ export default function Time_Logger() {
   // ❌ Delete log
   const deleteLog = (id: number) => {
     setLogs(prev => prev.filter(log => log.id !== id));
+  };
+
+  // Open edit modal for a log
+  const openEditModal = (log: Log) => {
+    setEditingLogId(log.id);
+    setEditLog({
+      name: log.name,
+      description: log.description
+    });
+    (document.getElementById('edit_modal') as HTMLDialogElement)?.showModal();
+  };
+
+  // Update log
+  const updateLog = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingLogId === null) return;
+    
+    setLogs(prev =>
+      prev.map(log =>
+        log.id === editingLogId
+          ? { ...log, name: editLog.name, description: editLog.description }
+          : log
+      )
+    );
+    setEditingLogId(null);
+    (document.getElementById('edit_modal') as HTMLDialogElement)?.close();
   };
 
   // Update live timers
@@ -200,6 +233,52 @@ export default function Time_Logger() {
         </div>
       </dialog>
 
+      {/* Modal for Editing Log */}
+      <dialog id="edit_modal" className="modal">
+        <div className="modal-box bg-[#F9D965]">
+          <h3 className="font-bold text-lg mb-4">Edit Log</h3>
+          <form
+            onSubmit={(e) => {
+              updateLog(e);
+            }}
+            className="grid grid-cols-1 gap-4"
+          >
+            <input
+              type="text"
+              maxLength={30}
+              placeholder="Log name"
+              value={editLog.name}
+              onChange={(e) => setEditLog({ ...editLog, name: e.target.value })}
+              required
+              className="border p-2 rounded-lg"
+            />
+            <textarea
+              placeholder="Description"
+              value={editLog.description}
+              onChange={(e) => setEditLog({ ...editLog, description: e.target.value })}
+              required
+              className="border p-2 rounded-lg h-28 resize-none"
+            />
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                type="button"
+                className="btn bg-red-700 px-4 py-2 rounded-lg text-white"
+                onClick={() => (document.getElementById('edit_modal') as HTMLDialogElement)?.close()}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn bg-green-600 text-white px-4 py-2 rounded-lg"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </dialog>
+
       {/* Top Page */}
 
         <div className="bg-[#F9D965] p-2 rounded-3xl">
@@ -266,7 +345,13 @@ export default function Time_Logger() {
                                 </button>
                               </td>
                               <td>{formatDuration(log)}</td>
-                              <td>
+                              <td className="flex gap-2">
+                                <button
+                                  onClick={() => openEditModal(log)}
+                                  className="text-blue-600 font-bold hover:text-blue-800"
+                                >
+                                  Edit
+                                </button>
                                 <button
                                   onClick={() => deleteLog(log.id)}
                                   className="text-red-600 font-bold hover:text-red-800"

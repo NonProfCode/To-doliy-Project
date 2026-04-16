@@ -40,7 +40,7 @@ const Tiptap = ({ content, onContentChange }: TiptapProps) => {
   editorProps: {
     attributes: {
       class:
-        "bg-[#FDFF9E] text-heading text-sm rounded-base block w-full h-64 p-5 shadow-xs resize-y focus:outline-none",
+        "bg-[#FDFF9E] text-heading text-sm rounded-base block w-full shadow-xs resize-y focus:outline-none",
     },
   },
 

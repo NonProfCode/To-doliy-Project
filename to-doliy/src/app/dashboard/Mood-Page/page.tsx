@@ -23,6 +23,7 @@ export default function Mood_Page() {
 });
   const [activeJournal, setActiveJournal] = useState<JournalEntry | null>(null);
   const [editingJournalId, setEditingJournalId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const addJournal = () => {
     const newJournal: JournalEntry = {
@@ -60,26 +61,20 @@ const moodMap = {
   '5': '😄',
 };
 
+  const deleteJournal = (id: number) => {
+    if (window.confirm('Are you sure you want to delete this journal?')) {
+      setJournals(prev => prev.filter(journal => journal.id !== id));
+      if (activeJournal && activeJournal.id === id) {
+        setActiveJournal(null);
+      }
+    }
+  };
 
-
-
-  {activeJournal && (
-    <div className="flex gap-2">
-      {(['1','2','3','4','5'] as const).map((mood) => (
-        <button
-          key={mood}
-          onClick={() => updateJournal(activeJournal.id, 'Mood', mood)}
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition
-            ${activeJournal.Mood === mood
-              ? 'bg-black text-white scale-110'
-              : 'bg-[#F3C623] hover:bg-[#FCFF58]'}
-          `}
-        >
-          {moodMap[mood]}
-        </button>
-      ))}
-    </div>
-  )}
+  const filteredJournals = journals.filter(journal =>
+    journal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    journal.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    journal.dateCreated.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
 
 
@@ -126,29 +121,53 @@ const moodMap = {
         <div className="bg-[#FFB22C] rounded-2xl p-4">
           <h2 className="text-xl sm:text-2xl font-bold mb-4">Journal List:</h2>
           
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search journals..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
           <ul className="space-y-2">
-            {journals.map((journal) => (
-              <li key={journal.id} className="flex items-center gap-2 hover:underline" onClick={() => setActiveJournal(journal)}>
-                {editingJournalId === journal.id ? (
-                  <input
-                    type="text"
-                    value={journal.name}
-                    onChange={(e) => updateJournal(journal.id, 'name', e.target.value)}
-                    onBlur={() => setEditingJournalId(null)}
-                    className="border p-1 rounded text-black w-full"
-                    autoFocus
-                  />
-                ) : (
-                  <span>
-  {journal.name} {moodMap[journal.Mood]}
-</span>
-                )}
-                <button
-                  className="text-blue-500 hover:underline"
-                  onClick={() => setEditingJournalId(journal.id)}
-                >
-                  Edit
-                </button>
+            {filteredJournals.map((journal) => (
+              <li key={journal.id} className="flex items-center gap-2 hover:bg-[#FFC857] p-2 rounded-lg transition-colors">
+                <div className="flex-1 cursor-pointer" onClick={() => setActiveJournal(journal)}>
+                  {editingJournalId === journal.id ? (
+                    <input
+                      type="text"
+                      value={journal.name}
+                      onChange={(e) => updateJournal(journal.id, 'name', e.target.value)}
+                      onBlur={() => setEditingJournalId(null)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') setEditingJournalId(null);
+                        if (e.key === 'Escape') setEditingJournalId(null);
+                      }}
+                      className="border p-1 rounded text-black w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      {journal.name} {moodMap[journal.Mood]}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    className="text-blue-600 hover:text-blue-800 px-2 py-1 rounded text-sm"
+                    onClick={() => setEditingJournalId(journal.id)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="text-red-600 hover:text-red-800 px-2 py-1 rounded text-sm"
+                    onClick={() => deleteJournal(journal.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
