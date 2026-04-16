@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, ClassAttributes, HTMLAttributes, JSX, Ref, JSXElementConstructor, ReactElement, ReactNode, ReactPortal, TableHTMLAttributes } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { useState, useEffect } from "react";
+import { DragDropContext, Droppable, Draggable} from "@hello-pangea/dnd";
+import { CiMenuKebab } from "react-icons/ci";
 
 
 type TaskStatus = "idle" | "running" | "paused" | "completed";
@@ -348,13 +349,14 @@ export default function Time_Logger() {
                               <td className="flex gap-2">
                                 <button
                                   onClick={() => openEditModal(log)}
-                                  className="text-blue-600 font-bold hover:text-blue-800"
+                                  className="text-black hover:text-gray-700 text-2xl"
                                 >
-                                  Edit
+                                  <CiMenuKebab />
                                 </button>
+                                
                                 <button
                                   onClick={() => deleteLog(log.id)}
-                                  className="text-red-600 font-bold hover:text-red-800"
+                                  className="text-red-600 font-bold hover:text-red-800 text-2xl"
                                 >
                                   X
                                 </button>
