@@ -2,6 +2,8 @@
 import { FaArrowRight } from "react-icons/fa";
 import { FaArrowLeft } from "react-icons/fa";
 import { useEffect, useState } from 'react';
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { IoCheckmarkDone, IoCalendar } from "react-icons/io5";
 
 interface Task {
   id: number;
@@ -14,6 +16,17 @@ interface Task {
 
 const getMonthYearLabel = (date: Date) => {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+};
+
+const formatDateToString = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getTodayDateString = () => {
+  return formatDateToString(new Date());
 };
 
 export default function Scheduler() {
@@ -132,10 +145,38 @@ export default function Scheduler() {
 
   const scheduleCompletion = calculateScheduleCompletion();
 
+  // Handle drag and drop events
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+
+    // If dropped outside a valid droppable area
+    if (!destination) return;
+
+    // If dropped in the same place
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+    const taskId = parseInt(draggableId);
+    const sourceDate = source.droppableId;
+    const destinationDate = destination.droppableId;
+
+    if (sourceDate !== destinationDate) {
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === taskId ? { ...task, expDate: destinationDate } : task
+        )
+      );
+    }
+  };
+
   return (
     <>
       <div className='bg-[#F9D965] p-4 rounded-3xl flex justify-between items-center'>
-        <h1 className='text-2xl font-semibold'>Today {tasks.filter(task => task.expDate === new Date().toISOString().split('T')[0]).length} events</h1>
+        <h1 className='text-2xl font-semibold'>Today {tasks.filter(task => task.expDate === getTodayDateString()).length} events</h1>
         <button
           onClick={() =>
             (document.getElementById('my_modal_1') as HTMLDialogElement)?.showModal()
@@ -184,57 +225,77 @@ export default function Scheduler() {
             </div>
           </header>
 
-          <div className="shadow ring-1 ring-black ring-opacity-5 lg:flex lg:flex-auto lg:flex-col">
-            <div className="grid grid-cols-7 gap-px bg-gray-200">
-              {daysInView.map((date) => {
-                const formattedDate = date.toISOString().split('T')[0];
-                const dayTasks = tasks.filter((task) => task.expDate === formattedDate);
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="shadow ring-1 ring-black ring-opacity-5 lg:flex lg:flex-auto lg:flex-col">
+              <div className="grid grid-cols-7 gap-px bg-gray-200">
+                {daysInView.map((date) => {
+                  const formattedDate = formatDateToString(date);
+                  const dayTasks = tasks.filter((task) => task.expDate === formattedDate);
 
-                return (
-                  <div key={formattedDate} className="relative bg-white px-3 py-2">
-                    <time dateTime={formattedDate}>{date.getDate()}</time>
-                    {dayTasks.length > 0 && (
-                      <ol className="mt-2">
-                        {dayTasks.map((task) => (
-                          <li key={task.id}>
-                            <a
-                              href="#"
-                              className="group flex"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                openEditModal(task);
-                              }}
-                            >
-                              <p className="flex-auto truncate font-medium text-gray-900 bg-amber-200">
-                                {task.name}    
-                              </p>
-                            </a>
-                            <p className="flex-auto truncate font-medium text-gray-900">
-                              {task.description}
-                            </p>
-                          </li>
-                        ))}
-                      </ol>
-                    )}
-                    {dayTasks.length > 0 && (
-                      <div>
-                        {dayTasks.map((task) => (
-                          <div key={task.id}>
-                            <input
-                              type="checkbox"
-                              checked={task.isCompleted}
-                              onChange={() => toggleTaskCompletion(task.id)}
-                            />
-                            <span>{task.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  return (
+                    <Droppable key={formattedDate} droppableId={formattedDate}>
+                      {(provided, snapshot) => (
+                        <div
+                          key={formattedDate}
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`relative bg-white px-3 py-2 min-h-32 ${
+                            snapshot.isDraggingOver ? 'bg-blue-50' : ''
+                          }`}
+                        >
+                          <time dateTime={formattedDate} className="font-semibold text-gray-800">
+                            {date.getDate()}
+                          </time>
+                          {dayTasks.length > 0 && (
+                            <ol className="mt-2 space-y-1">
+                              {dayTasks.map((task, index) => (
+                                <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
+                                  {(provided, snapshot) => (
+                                    <li
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      className={`p-2 rounded text-sm cursor-move transition-all ${
+                                        task.isCompleted
+                                          ? 'bg-green-200 line-through text-gray-600'
+                                          : 'bg-amber-200 text-gray-900 hover:shadow-md'
+                                      } ${snapshot.isDragging ? 'shadow-lg rotate-3' : ''}`}
+                                    >
+                                      <a
+                                        href="#"
+                                        className="flex items-start gap-2"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          openEditModal(task);
+                                        }}
+                                      >
+                                        <span className="flex-shrink-0 pt-0.5">
+                                          {task.isCompleted ? (
+                                            <IoCheckmarkDone className="text-green-600" size={16} />
+                                          ) : (
+                                            <IoCalendar className="text-amber-600" size={16} />
+                                          )}
+                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium truncate">{task.name}</p>
+                                          <p className="text-xs truncate opacity-75">{task.description}</p>
+                                        </div>
+                                      </a>
+                                    </li>
+                                  )}
+                                </Draggable>
+                              ))}
+                            </ol>
+                          )}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          </DragDropContext>
         </div>
       </div>
 
@@ -358,16 +419,6 @@ export default function Scheduler() {
         </div>
       </dialog>
 
-      <div className="mb-4">
-        <h3 className="text-xl font-semibold">Schedule Completion</h3>
-        <div className="w-full bg-gray-300 rounded-full h-6">
-          <div
-            className="bg-blue-500 h-6 rounded-full"
-            style={{ width: `${scheduleCompletion}%` }}
-          ></div>
-        </div>
-        <p className="text-lg mt-2">{scheduleCompletion}% of schedules completed</p>
-      </div>
     </>
   );
 }
