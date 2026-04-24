@@ -18,16 +18,25 @@ interface Log {
   status: "idle" | "running" | "paused" | "completed";
 }
 
+interface JournalEntry {
+  id: number;
+  name: string;
+  description: string;
+  isCompleted: boolean;
+  dateCreated: string;
+  Mood: '1' | '2' | '3' | '4' | '5';
+}
+
 export default function Statistics() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
+  const [journals, setJournals] = useState<JournalEntry[]>([]);
   const [taskProgress, setTaskProgress] = useState<number>(0);
-  const [scheduleProgress, setScheduleProgress] = useState<number>(0);
-  const [completedScheduleProgress, setCompletedScheduleProgress] = useState<number>(0);
 
   useEffect(() => {
     const storedTasks = localStorage.getItem("tasks");
     const storedSchedules = localStorage.getItem("schedulerTasks");
+    const storedJournals = localStorage.getItem("journals");
 
     if (storedTasks) {
       const parsedTasks = JSON.parse(storedTasks);
@@ -37,16 +46,17 @@ export default function Statistics() {
       setTaskProgress(progress);
     }
 
-    if (storedSchedules) {
-      const parsedSchedules = JSON.parse(storedSchedules);
-      const totalSchedules = parsedSchedules.length;
-      const completedSchedules = parsedSchedules.filter((schedule: Task) => schedule.isCompleted).length;
+ 
 
-      const scheduleProgress = totalSchedules > 0 ? Math.round((completedSchedules / totalSchedules) * 100) : 0;
-      setScheduleProgress(scheduleProgress);
+    if (storedJournals) {
+      const parsedJournals = JSON.parse(storedJournals);
+      setJournals(parsedJournals);
+    }
 
-      const completedProgress = totalSchedules > 0 ? Math.round((completedSchedules / totalSchedules) * 100) : 0;
-      setCompletedScheduleProgress(completedProgress);
+    const storedLogs = localStorage.getItem("logs");
+    if (storedLogs) {
+      const parsedLogs = JSON.parse(storedLogs);
+      setLogs(parsedLogs);
     }
   }, []);
 
@@ -109,26 +119,11 @@ export default function Statistics() {
         <p className="text-lg mt-2">{taskProgress}% of tasks completed</p>
       </div>
 
-      <div className="mb-4">
-        <h3 className="text-xl font-semibold">Schedule Completion</h3>
-        <div className="w-full bg-gray-300 rounded-full h-6">
-          <div
-            className="bg-blue-500 h-6 rounded-full"
-            style={{ width: `${scheduleProgress}%` }}
-          ></div>
-        </div>
-        <p className="text-lg mt-2">{scheduleProgress}% of schedules completed</p>
-      </div>
+     
 
       <div className="mb-4">
-        <h3 className="text-xl font-semibold">Completed Schedules</h3>
-        <div className="w-full bg-gray-300 rounded-full h-6">
-          <div
-            className="bg-purple-500 h-6 rounded-full"
-            style={{ width: `${completedScheduleProgress}%` }}
-          ></div>
-        </div>
-        <p className="text-lg mt-2">{completedScheduleProgress}% of schedules fully completed</p>
+        <h3 className="text-xl font-semibold">Journal Entries</h3>
+        <p className="text-lg">{journals.length} journal entries created</p>
       </div>
 
       <div className="mb-4">
