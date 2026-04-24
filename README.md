@@ -2,6 +2,8 @@
 
 A hobby project built with **Next.js** to help you track tasks, schedule time, and improve focus and wellness—all in one place.  
 
+<img width="1439" height="763" alt="image" src="https://github.com/user-attachments/assets/3cd2cc1c-4233-44d9-ac51-af4bbd9e53dc" />
+
 Projects scope:
 
 Create a beautiful, intuitive, and functional productivity tool with a strong focus on:
