@@ -93,10 +93,10 @@ export default function Sidebar() {
     }, []);
 
     return (
-        <div className="p-4 bg-[#F9D965] rounded-3xl h-full flex flex-col justify-between">
-            <p className="mb-4 font-bold text-3xl text-shadow-lg shadow-black">To-doliy:</p>
+        <div className=" bg-[#F9D965] rounded-3xl h-full flex flex-col justify-between shadow-lg shadow-black/20">
+            <p className="p-4 mb-4 font-bold text-3xl text-shadow-lg shadow-black">To-doliy:</p>
             {/* Menu Items */}
-            <div className="flex flex-col gap-1 text-2xl font-light">
+            <div className="flex flex-col gap-1 font-extralight pl-4 text-xl">
             {menuItems.map((item, index) => (
                 <Link href={item.path} key={index} className="flex items-center text-black gap-2 p-2 rounded-lg hover:bg-[#ffe9b3] transition-colors duration-200">
                 {item.icon}
@@ -107,7 +107,8 @@ export default function Sidebar() {
 
             {/* User Profile Section */}
             <div className="mt-auto">
-                <div className="rounded-3xl bg-[#FFB22C] p-3 mt-4 flex items-center gap-3">
+                <div className="p-2">
+                    <div className="rounded-4xl bg-[#FFB22C] p-2 mt-4 flex items-center gap-3">
                     <Link href="/dashboard/User_Profile" className="flex items-center gap-3 flex-1">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-white">
                             <img
@@ -124,6 +125,7 @@ export default function Sidebar() {
                     <Link href="/dashboard/User_Profile" className="text-black/70 hover:text-gray-700 transition-colors duration-200">
                         <CiMenuKebab className="text-2xl" />
                     </Link>
+                </div>
                 </div>
             </div>
         </div>

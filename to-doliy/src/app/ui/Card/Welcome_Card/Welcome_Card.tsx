@@ -53,7 +53,7 @@ export default function WelcomeCard() {
   }, []);
 
   return (
-    <div className="bg-[#F9D965] p-6 rounded-3xl text-black shadow-lg shadow-black/10">
+    <div className="bg-[#F9D965] p-6 rounded-3xl text-black shadow-lg shadow-black/20">
       <div className="grid gap-5 md:grid-cols-[1.8fr_1.2fr] items-start">
         <div className="space-y-4">
           <div className="flex items-center gap-4">

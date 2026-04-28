@@ -53,7 +53,7 @@ export default function Short_Cut_Card() {
   };
 
   return (
-    <div className="bg-[#F9D965] p-4 rounded-2xl">
+    <div className="bg-[#F9D965] p-4 rounded-2xl shadow-lg shadow-black/20">
       <h2 className="text-2xl font-bold mb-4">Short-Cut Logs</h2>
 
       {logs.length === 0 ? (

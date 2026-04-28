@@ -13,14 +13,14 @@ export default function Dashboard() {
       <WelcomeCard />
       
       {/* 1st line */}
-      <div className="grid grid-cols-2 mt-4 gap-2 ">
-        <div className="grid grid-row-2 gap-2">
+      <div className="grid grid-cols-2 mt-4 gap-4 ">
+        <div className="grid grid-row-2 gap-4 ">
           <Priority_Card />
           <Schedule_Card />
         </div>
       
       {/* 2nd line */}
-      <div className="grid grid-row-2 gap-2">
+      <div className="grid grid-row-2 gap-4">
           <Short_Cut_Card />
           <Statistics_Card />
       </div>
